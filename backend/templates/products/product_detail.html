@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}상품 상세{% endblock %}
+
+{% block content %}
+<section class="card">
+    <div id="productDetailBox" class="detail-box">
+        <p>로딩 중...</p>
+    </div>
+
+    <div class="product-create-actions" style="margin-top: 20px;">
+        <button type="button" id="editBtn" class="btn-primary">수정</button>
+        <button type="button" id="deleteBtn" class="btn-danger">삭제</button>
+        <a href="/products/" class="btn">목록</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block script %}
+<script>
+    window.PRODUCT_ID = "{{ view.kwargs.pk }}";
+</script>
+<script src="{% static 'js/product-detail.js' %}"></script>
+{% endblock %}

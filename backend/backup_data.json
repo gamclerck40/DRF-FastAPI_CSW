@@ -1,0 +1,59 @@
+[
+{
+  "model": "accounts.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$NSxiQNj16rpH1FFJ7crhoV$J4e5mKxC+txrYP6u6dy25h4cAnNZwJRYTmU3aGEcTn4=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "gamclerck40",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-30T06:50:04.572Z",
+    "created_at": "2026-03-30T06:50:04.863Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$oCvTSuemw3MYOIkVVSAHqs$rmOxWeKDtnoi5oKO1/7+P5Z25LqzHr3u/k9FbpTKJM4=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "testuser2",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-30T08:31:46.776Z",
+    "created_at": "2026-03-30T08:31:47.025Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$wUjQ5WOuwzXuJMxjDpfcbX$ffxeTIQtzXN+cE5VYCHfePIUnkuhdAjG265p106q7cs=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "normalframe1094",
+    "first_name": "",
+    "last_name": "",
+    "email": "kapol2990@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-03-31T05:21:56.076Z",
+    "created_at": "2026-03-31T05:21:56.320Z",
+    "groups": [],
+    "user_permissions": []
+  }
+}
+]
