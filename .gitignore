@@ -64,3 +64,4 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+*.deb

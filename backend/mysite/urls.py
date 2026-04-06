@@ -10,6 +10,8 @@ urlpatterns = [
     path("accounts/", include("apps.accounts.urls")),  # ✅ 추가
     path("api/products/", include("apps.products.urls")),  # ✅ 추가
     path("api/reviews/", include("apps.reviews.urls")),  # ✅ 추가
+    path("ai/", include("apps.ai_gateway.urls")),  # ← 이게 빠진 것
+    path("interactions/", include("apps.interactions.urls")),
 ]
 
 if settings.DEBUG:

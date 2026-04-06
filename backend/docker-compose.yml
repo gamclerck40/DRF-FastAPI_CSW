@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: product_review_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: product_user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - product_review_postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # =========================================================
+  # [추가] Redis (Celery Broker + Result Backend)
+  # =========================================================
+  redis:
+    image: redis:7
+    container_name: redis-new
+    restart: always   # [추가] Redis 자동 재시작
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  # =========================================================
+  # [추가] Django (DRF 서버)
+  # =========================================================
+  web:
+    build: .
+    container_name: drf-web
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # ← 추가
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  # 4️⃣ FastAPI (AI 서버)
+  fastapi:
+    build:
+      context: ../ai-server
+    container_name: fastapi-server
+    command: uvicorn main:app --host 0.0.0.0 --port 8001  # AI 서버 실행
+    restart: always
+    volumes:
+      - ../ai-server:/app
+    ports:
+      - "8001:8001"
+    networks:
+      - app-network
+
+  # =========================================================
+  # [추가] Celery Worker
+  # =========================================================
+  celery:
+    build: .
+    container_name: celery-worker
+    command: celery -A mysite worker --loglevel=info --pool=solo
+    restart: always
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - web
+    networks:
+      - app-network
+
+
+
+volumes:
+  product_review_postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

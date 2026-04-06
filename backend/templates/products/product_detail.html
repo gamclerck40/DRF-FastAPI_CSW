@@ -11,10 +11,43 @@
 
     <div class="product-create-actions" style="margin-top: 20px;">
         <button type="button" id="editBtn" class="btn-primary">수정</button>
-        <button type="button" id="deleteBtn" class="btn-danger">삭제</button>
+        <button type="button" id="deleteProductBtn" class="btn-danger">삭제</button>
         <a href="/products/" class="btn">목록</a>
     </div>
 </section>
+
+<section class="card" style="margin-top: 24px;">
+    <h2>리뷰 작성</h2>
+
+    <form id="reviewCreateForm" class="form" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="content">리뷰 내용</label>
+            <textarea id="content" name="content" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="rating">평점</label>
+            <input type="number" id="rating" name="rating" min="1" max="5" required>
+        </div>
+
+        <div class="form-group">
+            <label for="images">리뷰 이미지</label>
+            <input type="file" id="images" name="images" multiple accept="image/*">
+        </div>
+
+        <div id="previewBox" class="preview-box"></div>
+
+        <button type="submit" class="btn">리뷰 등록</button>
+    </form>
+</section>
+
+<section class="card" style="margin-top: 24px;">
+    <h2>리뷰 목록</h2>
+    <div id="reviewList">
+        <p>리뷰를 불러오는 중...</p>
+    </div>
+</section>
+
 {% endblock %}
 
 {% block script %}
