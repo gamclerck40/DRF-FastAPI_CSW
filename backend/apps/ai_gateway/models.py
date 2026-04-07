@@ -2,6 +2,7 @@
 
 from django.conf import settings
 from django.db import models
+from pgvector.django import VectorField
 
 
 class ReviewSimilarityResult(models.Model):
@@ -209,3 +210,21 @@ class AIAnalysisTask(models.Model):
         return f"{self.task_id} - {self.status}"
 
     # admin / 로그에서 "task_id - 상태" 형태로 표시
+
+
+class ReviewEmbedding(models.Model):
+    """
+    핵심 모델 (Vector DB 역할)
+    """
+
+    review = models.OneToOneField(
+        "reviews.Review", on_delete=models.CASCADE, related_name="embedding"
+    )
+
+    # e5-small-korean = 384 차원
+    embedding = VectorField(dimensions=384)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"ReviewEmbedding(review_id={self.review_id})"

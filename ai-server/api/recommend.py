@@ -10,9 +10,10 @@ from services.recommend_service import make_embeddings, calculate_similarity
 router = APIRouter(prefix="/api/v1/recommend", tags=["recommend"])
 
 
-@router.post("/embed", response_model=EmbeddingResponse)
-def embed_texts(payload: EmbeddingRequest):
-    return {"embeddings": make_embeddings(payload.texts)}
+@router.post("/embed")
+def embed_text(request: EmbeddingRequest):
+    vectors = make_embeddings(request.texts)
+    return {"embeddings": vectors}
 
 
 @router.post("/similarity", response_model=SimilarityResponse)

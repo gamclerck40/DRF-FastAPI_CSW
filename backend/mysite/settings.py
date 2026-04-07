@@ -16,27 +16,28 @@ import environ
 from pathlib import Path
 import os
 
-DB_NAME = os.getenv("DB_NAME", "product_db")
-DB_USER = os.getenv("DB_USER", "product_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST", "db")
-DB_PORT = os.getenv("DB_PORT", "5432")
+# =========================================================
+# 기본 경로 설정
+# =========================================================
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
+# =========================================================
+# .env 읽기
+# =========================================================
 env = environ.Env()
-environ.Env.read_env(BASE_DIR.parent / ".env")  # project-root/.env ← 한 단계 위
+environ.Env.read_env(BASE_DIR / ".env")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# =========================================================
+# 보안 / 실행 환경
+# =========================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-qo3pil7t6w&psag-654g$%y2ko$*sbx$%pu(_3j)pnherq%sm$"
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key")
+# [★수정]
+DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# [★수정]
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
 
 
 # Application definition
@@ -57,6 +58,7 @@ INSTALLED_APPS = [
     "apps.interactions",
     "apps.ai_gateway",
     "apps.crawling",
+    "pgvector.django",
 ]
 
 MIDDLEWARE = [
@@ -91,6 +93,11 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+DB_NAME = env("DB_NAME", default="product_review_db")
+DB_USER = env("DB_USER", default="product_review_user")
+DB_PASSWORD = env("DB_PASSWORD", default="product_review_password")
+DB_HOST = env("DB_HOST", default="db")
+DB_PORT = env("DB_PORT", default="5432")
 
 DATABASES = {
     "default": {
@@ -129,6 +136,15 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",  # 비로그인 사용자
+        "rest_framework.throttling.UserRateThrottle",  # 로그인 사용자
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "10/day",  # 비로그인 유저는 하루 10번
+        "user": "100/day",  # 로그인 유저는 하루 100번
+        "ai_analysis": "5/min",  # 특정 AI 분석 API는 분당 5번으로 제한
+    },
 }
 
 SIMPLE_JWT = {
@@ -143,10 +159,9 @@ SIMPLE_JWT = {
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ko-kr"
 
-TIME_ZONE = "UTC"
-
+TIME_ZONE = "Asia/Seoul"
 USE_I18N = True
 
 USE_TZ = True
@@ -201,3 +216,14 @@ CELERY_TASK_SOFT_TIME_LIMIT = 60 * 8
 # [추가] 테스트/개발 중 eager 모드 쓰고 싶으면 환경변수로 제어 가능
 CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False") == "True"
 CELERY_TASK_EAGER_PROPAGATES = True
+
+CORS_ALLOWED_ORIGINS = [
+    "https://your-domain.com",
+    "http://localhost:8000",  # 개발 환경
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# =========================================================
+# Default primary key field type
+# =========================================================
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

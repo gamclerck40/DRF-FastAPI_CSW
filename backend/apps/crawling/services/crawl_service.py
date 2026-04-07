@@ -1,42 +1,81 @@
-# apps/crawling/services/crawl_service.py
+# backend/apps/crawling/services/crawl_service.py
 
-# [유지] 사이트별 collector import
-from apps.crawling.collectors.danawa_collector import collect_danawa_search
-from apps.crawling.collectors.hwahae_collector import collect_hwahae_search
-from apps.crawling.collectors.glowpick_collector import collect_glowpick_search
+from django.utils import timezone
 
-# [유지] 저장 서비스 사용
-from apps.crawling.services.save_service import save_search_result
+from apps.crawling.models import CrawlRawData
+from .http import fetch_page  # 페이지 요청 (robots + retry 포함)
+from .parser import extract_page_info  # HTML 분석해서 정보 추출
 
 
-def crawl_search_target(target) -> dict:
+def crawl_search_target(target):
     """
-    [유지]
-    - site에 따라 collector 선택
-    - 저장은 save_service에 맡기고
-    - 여기서는 결과 요약만 반환
+    검색 페이지 크롤링 함수
+
+    전체 흐름:
+    1. 페이지 요청
+    2. HTML 파싱
+    3. 페이지 정보 저장
+    4. (있다면) 상품 링크 저장
+    5. 마지막 크롤링 시간 업데이트
     """
 
-    if target.site == "danawa":
-        result = collect_danawa_search(target)
+    # 1️⃣ 페이지 요청
+    # → 내부적으로 robots.txt 검사 + retry + delay 적용됨
+    response = fetch_page(target.url)
 
-    elif target.site == "hwahae":
-        result = collect_hwahae_search(target)
+    # HTML 문자열 추출
+    html = response.text
 
-    elif target.site == "glowpick":
-        result = collect_glowpick_search(target)
+    # 2️⃣ HTML 분석 (파싱)
+    # → 제목, 텍스트, a 태그 개수 등 추출
+    page_info = extract_page_info(html)
 
-    else:
-        raise ValueError(f"지원하지 않는 사이트입니다: {target.site}")
+    # 3️⃣ 상품 링크 후보 리스트
+    # ⚠ 현재는 구현 안되어 있어서 빈 리스트
+    candidate_links = []
 
-    save_result = save_search_result(target, result)
+    # 4️⃣ 페이지 전체 정보 저장 (로그 성격)
+    CrawlRawData.objects.create(
+        target=target,  # 어떤 크롤링 대상인지
+        source_url=target.url,  # 요청한 URL
+        page_title=page_info["title"],  # 페이지 제목
+        raw_text=page_info["text_preview"],  # 일부 텍스트
+        raw_html=html[:5000],  # HTML 일부 저장 (너무 크니까 잘라서 저장)
+        # 추가 정보(JSON)
+        extra_data={
+            "a_count": page_info["a_count"],  # 링크 개수
+            "contains_review_word": page_info[
+                "contains_review_word"
+            ],  # 리뷰 관련 단어 포함 여부
+            "contains_keyword": page_info["contains_keyword"],  # 키워드 포함 여부
+            "type": "page_info",  # 데이터 타입 구분용
+        },
+    )
 
+    # 5️⃣ 상품 링크 저장 (있다면)
+    # → 현재는 candidate_links가 빈 리스트라 실행 안됨
+    for item in candidate_links[:20]:
+
+        CrawlRawData.objects.create(
+            target=target,
+            source_url=target.url,
+            page_title=page_info["title"],
+            # 상품 정보
+            item_title=item["title"],  # 상품 이름
+            item_url=item["url"],  # 상품 링크
+            raw_text="",
+            raw_html="",
+            extra_data={
+                "type": "candidate_link",  # 이 데이터는 링크 정보임
+            },
+        )
+
+    # 6️⃣ 마지막 크롤링 시간 업데이트
+    target.last_crawled_at = timezone.now()
+    target.save(update_fields=["last_crawled_at"])
+
+    # 7️⃣ 결과 반환 (로그/테스트용)
     return {
-        "page_title": save_result["page_title"],
-        "candidate_count": save_result["candidate_count"],
-        "created_count": save_result["created_count"],
-        "updated_count": save_result["updated_count"],
-        # [추가] product target 생성 결과도 함께 반환
-        "created_product_targets": save_result["created_product_targets"],
-        "reactivated_product_targets": save_result["reactivated_product_targets"],
+        "page_title": page_info["title"],  # 페이지 제목
+        "candidate_count": len(candidate_links),  # 추출된 링크 개수
     }

@@ -42,3 +42,8 @@ gunicorn
 boto3
 django-storages
 django-prometheus
+pgvector==0.3.6
+undetected-chromedriver
+beautifulsoup4
+selenium
+setuptools

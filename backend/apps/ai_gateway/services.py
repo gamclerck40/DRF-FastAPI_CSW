@@ -1,12 +1,14 @@
 import requests
 from django.conf import settings
 
+FASTAPI_URL = "http://fastapi:8001"
+
 
 class FastAPIClient:
     @staticmethod
     def get_embedding(text: str):
         response = requests.post(
-            f"{settings.FASTAPI_BASE_URL}/api/v1/recommend/embed",
+            f"{FASTAPI_URL}/api/v1/recommend/embed",
             json={"texts": [text]},
             timeout=10,
         )

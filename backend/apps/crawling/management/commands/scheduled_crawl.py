@@ -1,43 +1,38 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.crawling.models import CrawlJobLog
-from apps.crawling.services.crawl_service import crawl_product_review_target
-from apps.crawling.services.target_selector import get_due_targets
+from apps.crawling.models import CrawlTarget, CrawlJobLog
+from apps.crawling.services.crawl_service import crawl_search_target
 
 
 class Command(BaseCommand):
-    help = (
-        "스케줄링용 리뷰 크롤링 명령어. due product target만 limit 개수만큼 실행합니다."
-    )
+    help = "스케줄 크롤링 실행 (limit 기반 분산 수집)"
 
     def add_arguments(self, parser):
+        # [추가] 한 번에 너무 많이 긁지 않도록 limit 옵션 추가
         parser.add_argument(
-            "--limit", type=int, default=3, help="한 번 실행할 최대 target 개수"
-        )
-        parser.add_argument(
-            "--review-limit", type=int, default=5, help="상품당 최대 리뷰 수집 개수"
-        )
-        parser.add_argument(
-            "--target-type", type=str, default="product", help="기본값은 product"
+            "--limit",
+            type=int,
+            default=10,
+            help="한 번 실행할 최대 target 개수",
         )
 
     def handle(self, *args, **options):
         limit = options["limit"]
-        review_limit = options["review_limit"]
-        target_type = options["target_type"]
 
-        targets = get_due_targets(limit=limit, target_type=target_type)
+        # [추가]
+        # 아직 오래 안 돌린 것부터(limit만큼) 가져와서 분산 수집
+        targets = CrawlTarget.objects.filter(
+            is_active=True,
+            target_type="search",
+        ).order_by("last_crawled_at", "id")[:limit]
+
         total_targets = targets.count()
-
         success_count = 0
         fail_count = 0
-
-        total_created = 0
-        total_updated = 0
-
         site_summary = {}
 
+        # [추가] 실행 로그 생성
         log = CrawlJobLog.objects.create(
             site="all",
             command_name="scheduled_crawl",
@@ -45,71 +40,62 @@ class Command(BaseCommand):
             total_targets=total_targets,
             success_count=0,
             fail_count=0,
-            message=(
-                f"scheduled_crawl 시작 "
-                f"(limit={limit}, review_limit={review_limit}, target_type={target_type})"
-            ),
+            message=f"scheduled_crawl 시작 (limit={limit})",
         )
 
-        self.stdout.write(self.style.SUCCESS("scheduled_crawl 시작"))
-
         if total_targets == 0:
-            log.status = "success"
-            log.message = "실행할 due target이 없습니다."
+            self.stdout.write(self.style.WARNING("수집할 대상이 없습니다."))
+            log.message = "수집할 대상이 없습니다."
             log.finished_at = timezone.now()
-            log.save()
-
-            self.stdout.write("실행할 대상이 없습니다.")
+            log.save(update_fields=["message", "finished_at"])
             return
 
+        self.stdout.write(
+            self.style.SUCCESS(f"scheduled_crawl 시작 - 대상 {total_targets}건")
+        )
+
         for target in targets:
-            self.stdout.write(f"\n[{target.site}] {target.url}")
+            self.stdout.write(f"[START] {target.id} - {target.title}")
 
             try:
-                result = crawl_product_review_target(target, review_limit=review_limit)
+                result = crawl_search_target(target)
                 success_count += 1
 
-                total_created += result["created_count"]
-                total_updated += result["updated_count"]
-
-                site_summary[target.site] = {
-                    "targets": site_summary.get(target.site, {}).get("targets", 0) + 1,
-                    "created": site_summary.get(target.site, {}).get("created", 0)
-                    + result["created_count"],
-                    "updated": site_summary.get(target.site, {}).get("updated", 0)
-                    + result["updated_count"],
-                    "reviews": site_summary.get(target.site, {}).get("reviews", 0)
-                    + result["review_count"],
-                }
+                site_summary[target.site] = site_summary.get(target.site, 0) + 1
 
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"성공 - review_count={result['review_count']} / "
-                        f"created={result['created_count']} / "
-                        f"updated={result['updated_count']}"
+                        f"[OK] {target.id} "
+                        f"title={result['page_title']} "
+                        f"candidate_count={result['candidate_count']}"
                     )
                 )
 
             except Exception as e:
                 fail_count += 1
-                self.stdout.write(self.style.ERROR(f"실패 - {str(e)}"))
+                self.stdout.write(self.style.ERROR(f"[FAIL] {target.id}: {e}"))
 
         final_status = "success" if fail_count == 0 else "failed"
 
+        # [추가] 실행 결과 로그 갱신
         log.status = final_status
         log.success_count = success_count
         log.fail_count = fail_count
-        log.message = (
-            f"사이트별 처리 수: {site_summary} | "
-            f"전체 created={total_created}, updated={total_updated}"
-        )
+        log.message = f"사이트별 처리 수: {site_summary}"
         log.finished_at = timezone.now()
-        log.save()
+        log.save(
+            update_fields=[
+                "status",
+                "success_count",
+                "fail_count",
+                "message",
+                "finished_at",
+            ]
+        )
 
-        self.stdout.write("\nscheduled_crawl 종료")
+        self.stdout.write(self.style.SUCCESS("scheduled_crawl 종료"))
         self.stdout.write(
             self.style.SUCCESS(
-                f"총 {total_targets}개 / 성공 {success_count} / 실패 {fail_count} / "
-                f"created {total_created} / updated {total_updated}"
+                f"총 {total_targets}개 / 성공 {success_count} / 실패 {fail_count}"
             )
         )

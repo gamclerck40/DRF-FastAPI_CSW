@@ -32,6 +32,7 @@ from .models import AIAnalysisTask
 # [추가]
 # 실제 AI 분석은 Celery task로 이동했으므로 task import 추가
 from .tasks import analyze_review_similarity_task
+from rest_framework.throttling import UserRateThrottle
 
 
 class EmbeddingAPIView(APIView):
@@ -109,6 +110,10 @@ class SimilarityAPIView(APIView):
 #     return "관련 있음"
 
 
+class AIAnalysisRateThrottle(UserRateThrottle):
+    scope = "ai_analysis"
+
+
 class ReviewAnalyzeAPIView(APIView):
     """
     [수정]
@@ -124,6 +129,7 @@ class ReviewAnalyzeAPIView(APIView):
     -> task_id 반환
     """
 
+    throttle_classes = [AIAnalysisRateThrottle]  # 분당 5회 제한 적용
     permission_classes = [AllowAny]
 
     # [수정]
