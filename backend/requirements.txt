@@ -42,8 +42,7 @@ gunicorn
 boto3
 django-storages
 django-prometheus
-pgvector==0.3.6
-undetected-chromedriver
+# undetected-chromedriver # 크롬 드라이버 (배포 서버에 불필요)
 beautifulsoup4
-selenium
+# selenium # 브라우저 자동화(배포시 필요 없음.)
 setuptools
