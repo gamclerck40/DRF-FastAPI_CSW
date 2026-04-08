@@ -6,8 +6,8 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     wget \
     gnupg \
-    chromium \
-    chromium-driver \
+    # chromium \
+    # chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
