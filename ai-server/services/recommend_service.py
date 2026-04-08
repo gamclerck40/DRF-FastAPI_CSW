@@ -1,5 +1,6 @@
 from models.embedding_model import embedding_model
-from sklearn.metrics.pairwise import cosine_similarity
+
+# from sklearn.metrics.pairwise import cosine_similarity
 
 
 def make_embeddings(texts: list[str]) -> list[list[float]]:
@@ -27,5 +28,5 @@ def calculate_similarity(text1: str, text2: str) -> float:
 
     # ✅ AI 활성화 상태 → 실제 유사도 계산
     vectors = embedding_model.encode([text1, text2])
-    score = cosine_similarity([vectors[0]], [vectors[1]])[0][0]
+    score = None
     return float(score)
