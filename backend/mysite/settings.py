@@ -179,7 +179,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://fastapi:8001")
+# =========================================================
+# FastAPI 서버 주소
+# docker-compose 내부 통신 기준 기본값
+# =========================================================
+FASTAPI_BASE_URL = env("FASTAPI_BASE_URL", default="http://fastapi:8001")
 # =========================================================
 # [추가] Celery + Redis 설정
 # =========================================================
@@ -187,7 +191,11 @@ FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://fastapi:8001")
 # [추가] Redis 주소
 # docker-compose 사용 시 보통 redis://redis:6379/0
 # 로컬 직접 실행 시 redis://127.0.0.1:6379/0
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+# =========================================================
+# Celery + Redis
+# docker-compose 내부 통신 기준 기본값
+# =========================================================
+REDIS_URL = env("REDIS_URL", default="redis://redis:6379/0")
 # [추가] Celery broker / backend
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
@@ -214,7 +222,7 @@ CELERY_TASK_TIME_LIMIT = 60 * 10
 CELERY_TASK_SOFT_TIME_LIMIT = 60 * 8
 
 # [추가] 테스트/개발 중 eager 모드 쓰고 싶으면 환경변수로 제어 가능
-CELERY_TASK_ALWAYS_EAGER = os.getenv("CELERY_TASK_ALWAYS_EAGER", "False") == "True"
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 CELERY_TASK_EAGER_PROPAGATES = True
 
 CORS_ALLOWED_ORIGINS = [
