@@ -23,7 +23,7 @@ tzlocal==5.3.1
 certifi==2026.2.25
 charset-normalizer==3.4.6
 idna==3.11
-urllib3==2.6.
+urllib3==2.6.3
 
 click==8.3.1
 click-didyoumean==0.3.1
