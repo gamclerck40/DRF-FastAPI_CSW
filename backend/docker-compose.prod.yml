@@ -93,7 +93,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - static_volume:/app/static
+      - static_volume:/app/staticfiles
       - media_volume:/app/media
     networks:
       - app-network
