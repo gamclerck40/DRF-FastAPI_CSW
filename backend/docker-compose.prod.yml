@@ -1,0 +1,110 @@
+version: "3.9"
+
+services:
+  db:
+    image: ankane/pgvector:v0.5.1
+    container_name: product_review_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: product_user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - product_review_postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # =========================================================
+  # [추가] Redis (Celery Broker + Result Backend)
+  # =========================================================
+  redis:
+    image: redis:7
+    container_name: redis-server
+    restart: always   # [추가] Redis 자동 재시작
+    networks:
+      - app-network
+
+  # =========================================================
+  # [추가] Django (DRF 서버)
+  # =========================================================
+  web:
+    build: .
+    container_name: drf-web
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn mysite.wsgi:application --bind 0.0.0.0:8000"
+    restart: always
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    expose:
+      - "8000"
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # ← 추가
+    depends_on:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  # =========================================================
+  # [추가] Celery Worker
+  # =========================================================
+  celery:
+    build: .
+    container_name: celery-worker
+    command: celery -A mysite worker --loglevel=info --pool=solo
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - web
+      - fastapi
+    networks:
+      - app-network
+
+  # 4️⃣ FastAPI (AI 서버)
+  fastapi:
+    build:
+      context: ../ai-server
+    container_name: fastapi-server
+    command: uvicorn main:app --host 0.0.0.0 --port 8001  # AI 서버 실행
+    restart: always
+    expose:
+      - "8001"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx-server
+    restart: always
+    depends_on:
+      - web
+      - fastapi
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/static
+      - media_volume:/app/media
+    networks:
+      - app-network
+
+
+
+volumes:
+  product_review_postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  app-network:
+    driver: bridge
