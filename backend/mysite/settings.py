@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "apps.ai_gateway",
     "apps.crawling",
     "pgvector.django",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -156,6 +157,15 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+STORAGES = {
+    "default": {
+        "BACKEND": "mysite.storage.MediaStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "mysite.storage.StaticStorage",
+    },
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
@@ -172,14 +182,32 @@ USE_TZ = True
 
 AUTH_USER_MODEL = "accounts.User"
 
-# 이미지 업로드 파일 접근 경로
-MEDIA_URL = "/media/"
-# 실제 업로드 파일 저장 폴더
-MEDIA_ROOT = BASE_DIR / "media"
+# S3를 사용할 경우 이부분은 주석처리 합니다.
+# MEDIA_URL = "/media/"
+# MEDIA_ROOT = BASE_DIR / "media"
 
-STATIC_URL = "/static/"
+# STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+
+AWS_DEFAULT_ACL = None
+
+# S3를 사용할 경우 이부분은 주석처리 합니다.
+# MEDIA_URL = "/media/"
+# MEDIA_ROOT = BASE_DIR / "media"
+
+# 순서대로 실행되므로 순서를 반드시 맞춰주세요.
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-2")
+AWS_STORAGE_BUCKET_NAME_STATIC = os.getenv("AWS_STORAGE_BUCKET_NAME_STATIC")
+AWS_STORAGE_BUCKET_NAME_MEDIA = os.getenv("AWS_STORAGE_BUCKET_NAME_MEDIA")
+
+STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME_STATIC}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/static/"
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME_MEDIA}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/"
+
 # =========================================================
 # FastAPI 서버 주소
 # docker-compose 내부 통신 기준 기본값

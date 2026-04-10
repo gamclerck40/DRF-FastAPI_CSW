@@ -46,3 +46,5 @@ django-prometheus
 beautifulsoup4
 # selenium # 브라우저 자동화(배포시 필요 없음.)
 setuptools
+boto3
+django-storages
