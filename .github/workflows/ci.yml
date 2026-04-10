@@ -21,7 +21,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U product_review_user -d product_review_db"
+          --health-cmd="pg_isready -U product_user -d product_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -123,12 +123,12 @@ jobs:
 
       - name: Enable pgvector extension
         env:
-          PGPASSWORD: product_review_password
+          PGPASSWORD: password
         run: |
           psql \
             -h 127.0.0.1 \
-            -U product_review_user \
-            -d product_review_db \
+            -U product_user \
+            -d product_db \
             -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
       - name: Wait for Redis
@@ -229,9 +229,9 @@ jobs:
           DJANGO_DEBUG=False
           DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
 
-          DB_NAME=product_review_db
-          DB_USER=product_review_user
-          DB_PASSWORD=product_review_password
+          DB_NAME=product_db
+          DB_USER=product_user
+          DB_PASSWORD=password
           DB_HOST=db
           DB_PORT=5432
 
