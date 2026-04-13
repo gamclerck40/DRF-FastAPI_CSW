@@ -8,7 +8,7 @@ class FastAPIClient:
     @staticmethod
     def get_embedding(text: str):
         response = requests.post(
-            f"{FASTAPI_URL}/api/v1/recommend/embed",
+            f"{settings.FASTAPI_BASE_URL}/api/v1/recommend/embed",
             json={"texts": [text]},
             timeout=10,
         )
