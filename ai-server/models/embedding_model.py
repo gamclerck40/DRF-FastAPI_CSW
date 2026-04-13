@@ -1,5 +1,6 @@
-# from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer
 
+# # 전역에서 1회 로드
+embedding_model = SentenceTransformer("upskyy/e5-small-korean")
 
-# FastAPI 서버가 뜰 때 모델을 한 번만 메모리에 로딩
-embedding_model = None
+# embedding_model = None
