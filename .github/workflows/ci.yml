@@ -260,8 +260,10 @@ jobs:
           docker compose up -d --build
 
       - name: Wait for containers to initialize
+        working-directory: backend
         run: |
-          sleep 25
+          docker compose up -d --build
+          docker compose wait fastapi || true
 
       - name: Show running containers
         working-directory: backend
@@ -275,7 +277,7 @@ jobs:
       - name: FastAPI health check
         working-directory: backend
         run: |
-          docker compose exec fastapi curl -f http://127.0.0.1:8001/
+          docker inspect fastapi-server --format='{{.State.Health.Status}}' | grep healthy
 
       - name: Celery container check
         working-directory: backend

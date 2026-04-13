@@ -15,6 +15,11 @@ REDIS_URL = "redis://redis:6379/0"
 app.include_router(recommend_router)
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/")
 def root():
     return {"message": "AI server is running"}
