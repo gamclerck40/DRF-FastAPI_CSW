@@ -273,8 +273,9 @@ jobs:
           curl -f http://127.0.0.1:8000/admin/login/
 
       - name: FastAPI health check
+        working-directory: backend
         run: |
-          curl -f http://127.0.0.1:80/api/   # Nginx 통해서 확인
+          docker compose exec fastapi curl -f http://127.0.0.1:8001/
 
       - name: Celery container check
         working-directory: backend
