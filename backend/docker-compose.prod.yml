@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   db:
-    image: ankane/pgvector:v0.5.1
+    image: pgvector/pgvector:pg16
     container_name: product_review_postgres
     restart: always
     environment:
