@@ -21,7 +21,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U product_user -d product_db"
+          --health-cmd="pg_isready -U product_review_user -d product_review_db"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -123,12 +123,12 @@ jobs:
 
       - name: Enable pgvector extension
         env:
-          PGPASSWORD: password
+          PGPASSWORD: product_review_password
         run: |
           psql \
             -h 127.0.0.1 \
-            -U product_user \
-            -d product_db \
+            -U product_review_user \
+            -d product_review_db \
             -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
       - name: Wait for Redis
@@ -244,8 +244,8 @@ jobs:
           # ===============================
           AWS_ACCESS_KEY_ID=dummy
           AWS_SECRET_ACCESS_KEY=dummy
-          AWS_STORAGE_BUCKET_NAME_STATIC=product-review-static
-          AWS_STORAGE_BUCKET_NAME_MEDIA=product-review-media
+          AWS_STORAGE_BUCKET_NAME_STATIC=product-review-static-csw
+          AWS_STORAGE_BUCKET_NAME_MEDIA=product-review-media-csw
           AWS_S3_REGION_NAME=ap-northeast-2
           EOF
 
@@ -260,13 +260,9 @@ jobs:
           docker compose up -d --build
 
       - name: Wait for containers to initialize
-        working-directory: backend
         run: |
-          # docker compose up -d --build
-          # docker compose wait fastapi || true
-            sleep 40
-            docker compose ps
-            docker compose logs fastapi --tail=30
+          sleep 25
+
       - name: Show running containers
         working-directory: backend
         run: |
@@ -277,9 +273,8 @@ jobs:
           curl -f http://127.0.0.1:8000/admin/login/
 
       - name: FastAPI health check
-        working-directory: backend
         run: |
-          docker inspect fastapi-server --format='{{.State.Health.Status}}' | grep healthy
+          curl -f http://127.0.0.1:8001/
 
       - name: Celery container check
         working-directory: backend
