@@ -123,12 +123,12 @@ jobs:
 
       - name: Enable pgvector extension
         env:
-          PGPASSWORD: product_review_password
+          PGPASSWORD: password
         run: |
           psql \
             -h 127.0.0.1 \
-            -U product_review_user \
-            -d product_review_db \
+            -U product_user \
+            -d product_db \
             -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
       - name: Wait for Redis
