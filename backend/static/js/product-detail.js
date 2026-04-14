@@ -321,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
     //       결과를 즉시 전달받아 화면에 표시
     // =========================================================
     function connectWebSocket(taskId, reviewId, button, resultBox) {
-        const socket = new WebSocket(`ws://${window.location.hostname}:8001/ws/task/${taskId}`);
+        const socket = new WebSocket(`wss://${window.location.hostname}/ws/task/${taskId}`);
 
         socket.onopen = function () {
             console.log("[WebSocket] Connection established for task:", taskId);
