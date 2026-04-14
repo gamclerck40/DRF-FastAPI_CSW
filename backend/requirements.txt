@@ -48,3 +48,4 @@ beautifulsoup4
 setuptools
 boto3
 django-storages
+django-prometheus

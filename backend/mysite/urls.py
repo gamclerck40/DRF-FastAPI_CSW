@@ -2,9 +2,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # 🔥 [추가] Prometheus metrics 엔드포인트
+    path("", include("django_prometheus.urls")),
     path("products/", include("apps.products.urls")),
     path("reviews/", include("apps.reviews.urls")),
     path("accounts/", include("apps.accounts.urls")),  # ✅ 추가
